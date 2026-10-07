@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | Es Coklat Berkah</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="apple-touch-icon" href="/favicon.svg">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-color: #e4e0d8;
+            --surface-color: #ffffff;
+            --primary-brown: #4a2c11;
+            --secondary-brown: #6f4728;
+            --border-color: #f0e9df;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: #2b2118;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .navbar-minimal {
+            background-color: var(--surface-color);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 0;
+        }
+
+        .nav-pills .nav-link.active {
+            background-color: var(--primary-brown);
+            color: white;
+        }
+
+        .nav-pills .nav-link {
+            color: var(--secondary-brown);
+            font-weight: 600;
+        }
+
+        .card-custom {
+            background-color: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.25rem;
+        }
+
+        .btn-brown {
+            background-color: var(--primary-brown);
+            color: white;
+        }
+
+        .btn-brown:hover {
+            background-color: var(--secondary-brown);
+            color: white;
+        }
+
+        .icon-btn {
+            cursor: pointer;
+        }
+
+        .row-actions-cell {
+            min-width: 128px;
+            white-space: nowrap;
+        }
+
+        .row-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+            flex-wrap: nowrap;
+        }
+
+        .row-actions .btn {
+            display: inline-flex;
+            flex: 0 0 2rem;
+            align-items: center;
+            justify-content: center;
+            width: 2rem;
+            height: 2rem;
+            padding: 0;
+        }
+
+        .procurement-photo-cell {
+            min-width: 112px;
+            text-align: center;
+        }
+
+        .procurement-photo-cell img {
+            width: 64px;
+            height: 64px;
+            border-radius: 4px;
+            object-fit: cover;
+        }
+
+        .procurement-photo-empty {
+            color: #6c757d;
+            font-size: 0.75rem;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Modal masuk. -->
+    <div class="modal fade" id="loginModal" data-bs-backdrop="static" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content card-custom">
+                <h5 class="fw-bold mb-3">☕ Login</h5>
+                <form id="loginForm" onsubmit="handleLogin(event)">
+                    <div class="mb-3"><label class="form-label">Username</label><input type="text" id="loginUsername" class="form-control" value="admin" required></div>
+                    <div class="mb-3"><label class="form-label">Password</label><input type="password" id="loginPassword" class="form-control" value="admin123" required></div>
+                    <div id="loginAlert" class="text-danger small mb-3 d-none">Username atau Password Salah!</div>
+                    <button type="submit" id="btnLoginSubmit" class="btn btn-brown w-100">Sign In</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal pengaturan profil. -->
+    <div class="modal fade" id="profileModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content card-custom">
+                <h5 class="fw-bold mb-3">✏️ Edit Profil dan Password</h5>
+                <form onsubmit="simpanProfil(event)">
+                    <div class="mb-2"><label class="form-label small">Nama Lengkap</label><input type="text" id="profNama" class="form-control" required></div>
+                    <div class="mb-2"><label class="form-label small">Password Lama</label><input type="password" id="profPassLama" class="form-control" required></div>
+                    <div class="mb-3"><label class="form-label small">Password Baru</label><input type="password" id="profPassBaru" class="form-control" placeholder="Kosongkan jika tidak diubah"></div>
+                    <div id="profAlert" class="text-danger small mb-2 d-none"></div>
+                    <button type="submit" class="btn btn-brown w-100">Simpan</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigasi utama dan identitas pengguna. -->
+    <nav class="navbar-minimal mb-4">
+        <div class="container d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-3">
+                <span class="fs-5 fw-bold">☕ Es Coklat Berkah</span>
+                <div class="user-profile border-start ps-3 d-flex align-items-center gap-2 icon-btn" onclick="openProfileModal()">
+                    <i class="bi bi-person-circle fs-4 text-secondary"></i>
+                    <span id="navUserName" class="fw-semibold">Guest</span>
+                    <i class="bi bi-pencil-fill text-muted small"></i>
+                </div>
+            </div>
+            <span class="badge bg-light text-dark border">Dashboard</span>
+        </div>
+    </nav>
+
+    <div class="container pb-5">
+        <ul class="nav nav-pills mb-4 justify-content-center" id="erpTabs">
+            <li class="nav-item"><button class="nav-link active" onclick="switchTab('posTab')">🛒 Kasir</button></li>
+            <li class="nav-item"><button class="nav-link" onclick="switchTab('stokTab')">📦 Stok Gudang</button></li>
+            <li class="nav-item"><button class="nav-link" onclick="switchTab('procurementTab')">🚚 Pembelian</button></li>
+            <li class="nav-item"><button class="nav-link" onclick="switchTab('kasTab')">💰 Laporan Keuangan</button></li>
+        </ul>
+
+        <!-- Transaksi penjualan. -->
+        <div id="posTab" class="tab-content-item">
+            <div class="card-custom mb-4">
+                <form onsubmit="tambahTransaksi(event)" class="row g-3 align-items-end">
+                    <div class="col-md-3">
+                        <label class="form-label small">Saluran Penjualan</label>
+                        <select id="posChannel" class="form-select" required>
+                            <option value="Walk-in">Walk-in (Outlet)</option>
+                            <option value="WhatsApp">WhatsApp</option>
+                            <option value="GoFood">GoFood</option>
+                            <option value="GrabFood">GrabFood</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small">Nama Pembeli (Opsional)</label>
+                        <input type="text" id="posPembeli" class="form-control" placeholder="Kosongkan jika N/A">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small">Jumlah Gelas</label>
+                        <div class="input-group">
+                            <button class="btn btn-outline-secondary" type="button" onclick="ubahGelas(-1)">-</button>
+                            <input type="number" id="posGelas" class="form-control text-center" value="1" min="1" required>
+                            <button class="btn btn-outline-secondary" type="button" onclick="ubahGelas(1)">+</button>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small">Total Penjualan</label>
+                        <div class="input-group">
+                            <input type="number" id="posTotal" class="form-control" placeholder="10" required>
+                            <span class="input-group-text">.000</span>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small">Metode Bayar</label>
+                        <select id="posMetode" class="form-select" required>
+                            <option value="Cash">Tunai (Cash)</option>
+                            <option value="QRIS DANA/BCA">QRIS DANA/BCA</option>
+                        </select>
+                    </div>
+                    <div class="col-12 mt-3">
+                        <button type="submit" class="btn btn-brown w-100">Simpan</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="card-custom">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
+                    <h5 class="mb-0">Riwayat Transaksi</h5>
+                    <div class="d-flex flex-wrap align-items-center gap-2">
+                        <div class="btn-group btn-group-sm" role="group" aria-label="Data limit POS">
+                            <button type="button" class="btn btn-outline-secondary active" data-limit-button="pos" data-limit="25">25</button>
+                            <button type="button" class="btn btn-outline-secondary" data-limit-button="pos" data-limit="50">50</button>
+                            <button type="button" class="btn btn-outline-secondary" data-limit-button="pos" data-limit="100">100</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-2 mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label small mb-1">Filter</label>
+                        <select id="posFilterType" class="form-select form-select-sm">
+                            <option value="all">Semua data</option>
+                            <option value="pembeli">Nama pembeli</option>
+                            <option value="tanggal">Tanggal</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small mb-1">Kata Kunci</label>
+                        <input id="posFilterValue" type="text" class="form-control form-control-sm" placeholder="Masukkan nama pembeli">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small mb-1">Tanggal</label>
+                        <input id="posFilterDate" type="date" class="form-control form-control-sm">
+                    </div>
+                </div>
+
+                <table class="table align-middle">
+                    <thead><tr><th>ID</th><th>Saluran</th><th>Pembeli</th><th>Gelas</th><th>Total Penjualan</th><th>Metode</th><th>Tanggal</th><th>Aksi</th></tr></thead>
+                    <tbody id="posTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Persediaan bahan baku. -->
+        <div id="stokTab" class="tab-content-item d-none">
+            <div class="card-custom mb-4">
+                <form onsubmit="tambahBahanBaku(event)" class="row g-3 align-items-end">
+                    <div class="col-md-3">
+                        <label class="form-label small" for="newNama">Nama Bahan Baku</label>
+                        <input type="text" id="newNama" class="form-control" placeholder="Nama Bahan Baku" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small" for="newStok">Jumlah Stok</label>
+                        <input type="number" step="0.1" id="newStok" class="form-control" placeholder="Contoh 10.5" required>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small" for="newSatuan">Satuan</label>
+                        <input type="text" id="newSatuan" class="form-control" placeholder="kg/liter" required>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small" for="newMin">Batas Minimum</label>
+                        <input type="number" step="0.1" id="newMin" class="form-control" placeholder="Batas minimum" required>
+                    </div>
+                    <div class="col-12 mt-3">
+                        <button type="submit" class="btn btn-brown w-100">Tambah Bahan</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="card-custom">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
+                    <h5 class="mb-0">Daftar Stok Gudang</h5>
+                    <div class="d-flex flex-wrap align-items-center gap-2">
+                        <div class="btn-group btn-group-sm" role="group" aria-label="Data limit stok">
+                            <button type="button" class="btn btn-outline-secondary active" data-limit-button="stok" data-limit="25">25</button>
+                            <button type="button" class="btn btn-outline-secondary" data-limit-button="stok" data-limit="50">50</button>
+                            <button type="button" class="btn btn-outline-secondary" data-limit-button="stok" data-limit="100">100</button>
+                        </div>
+                    </div>
+                </div>
+                <table class="table align-middle">
+                    <thead><tr><th>ID</th><th>Nama Bahan Baku</th><th>Stok</th><th>Satuan</th><th>Batas Min.</th><th>Aksi</th></tr></thead>
+                    <tbody id="stokTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Riwayat pembelian bahan baku. -->
+        <div id="procurementTab" class="tab-content-item d-none">
+            <div class="card-custom mb-4">
+                <form onsubmit="tambahPembelian(event)" class="row g-2 align-items-end">
+                    <div class="col-md-3">
+                        <label class="form-label small" for="procBahanSelect">Nama Bahan Baku</label>
+                        <select id="procBahanSelect" class="form-select" required></select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small" for="procJumlah">Jumlah Pembelian</label>
+                        <input type="number" step="0.1" id="procJumlah" class="form-control" placeholder="Jumlah" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small" for="procTotal">Total Biaya</label>
+                        <div class="input-group">
+                            <input type="number" id="procTotal" class="form-control" placeholder="Total Biaya" required>
+                            <span class="input-group-text">.000</span>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small" for="procSupplier">Supplier</label>
+                        <input type="text" id="procSupplier" class="form-control" placeholder="Supplier" required>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small mb-1" for="procFoto">Bukti Transaksi (opsional)</label>
+                        <input type="file" id="procFoto" class="form-control" accept="image/jpeg,image/png,image/webp">
+                    </div>
+                    <div class="col-12 mt-3">
+                        <button type="submit" class="btn btn-brown w-100">Catat Pembelian</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="card-custom">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
+                    <h5 class="mb-0">Riwayat Transaksi</h5>
+                    <div class="d-flex flex-wrap align-items-center gap-2">
+                        <div class="btn-group btn-group-sm" role="group" aria-label="Data limit procurement">
+                            <button type="button" class="btn btn-outline-secondary active" data-limit-button="procurement" data-limit="25">25</button>
+                            <button type="button" class="btn btn-outline-secondary" data-limit-button="procurement" data-limit="50">50</button>
+                            <button type="button" class="btn btn-outline-secondary" data-limit-button="procurement" data-limit="100">100</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-2 mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label small mb-1">Filter</label>
+                        <select id="procFilterType" class="form-select form-select-sm">
+                            <option value="all">Semua data</option>
+                            <option value="namaBahan">Nama bahan baku</option>
+                            <option value="tanggal">Tanggal</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small mb-1">Kata Kunci</label>
+                        <input id="procFilterValue" type="text" class="form-control form-control-sm" placeholder="Masukkan nama bahan">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small mb-1">Tanggal</label>
+                        <input id="procFilterDate" type="date" class="form-control form-control-sm">
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>ID (Bahan)</th>
+                                <th>Nama Bahan</th>
+                                <th>Jumlah</th>
+                                <th>Total Biaya</th>
+                                <th>Supplier</th>
+                                <th>Tanggal</th>
+                                <th>Bukti Transaksi</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="procTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ringkasan arus kas. -->
+        <div id="kasTab" class="tab-content-item d-none">
+            <div class="card-custom mb-4">
+                <div class="row g-2 align-items-end">
+                    <div class="col-md-3">
+                        <label class="form-label small" for="kasFilterPeriod">Periode Laporan</label>
+                        <select id="kasFilterPeriod" class="form-select">
+                            <option value="all">Semua waktu</option>
+                            <option value="date">Tanggal tertentu</option>
+                            <option value="month">Bulanan</option>
+                            <option value="year">Tahunan</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3" id="kasDateFilterGroup" hidden>
+                        <label class="form-label small" for="kasFilterDate">Tanggal</label>
+                        <input type="date" id="kasFilterDate" class="form-control">
+                    </div>
+                    <div class="col-md-3" id="kasMonthFilterGroup" hidden>
+                        <label class="form-label small" for="kasFilterMonth">Bulan</label>
+                        <select id="kasFilterMonth" class="form-select">
+                            <option value="01">Januari</option>
+                            <option value="02">Februari</option>
+                            <option value="03">Maret</option>
+                            <option value="04">April</option>
+                            <option value="05">Mei</option>
+                            <option value="06">Juni</option>
+                            <option value="07">Juli</option>
+                            <option value="08">Agustus</option>
+                            <option value="09">September</option>
+                            <option value="10">Oktober</option>
+                            <option value="11">November</option>
+                            <option value="12">Desember</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3" id="kasYearFilterGroup" hidden>
+                        <label class="form-label small" for="kasFilterYear">Tahun</label>
+                        <select id="kasFilterYear" class="form-select">
+                            <option value="">Pilih tahun</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="row g-3 mb-4">
+                <div class="col-md-4"><div class="card-custom text-success"><h6>Total Uang Masuk</h6><h3 id="kasMasuk">Rp 0</h3></div></div>
+                <div class="col-md-4"><div class="card-custom text-danger"><h6>Total Uang Keluar</h6><h3 id="kasKeluar">Rp 0</h3></div></div>
+                <div class="col-md-4"><div class="card-custom text-primary"><h6>Saldo Kas Neto</h6><h3 id="kasSaldo">Rp 0</h3></div></div>
+            </div>
+            <div class="card-custom">
+                <h5 class="mb-3">Grafik Arus Kas</h5>
+                <div style="height: 300px;"><canvas id="chartKas"></canvas></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let myChart = null, loginModalObj = null, profileModalObj = null;
+        let currentUser = { username: "admin", nama: "Saliyah Macky" };
+
+        function formatDesimal(val) {
+            if (val === null || val === undefined) return '0,0';
+            return parseFloat(val).toFixed(1).replace('.', ',');
+        }
+
+        async function fetchWithTimeout(url, options = {}) {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 10000);
+            try {
+                return await fetch(url, { ...options, signal: controller.signal });
+            } catch (error) {
+                if (error.name === 'AbortError') {
+                    throw new Error('Server tidak merespons dalam 10 detik. Periksa server Java dan koneksi database.');
+                }
+                throw new Error('Tidak dapat terhubung ke server. Periksa apakah server Java sedang berjalan.');
+            } finally {
+                clearTimeout(timeoutId);
+            }
+        }
+
+        async function fetchJSON(url) {
+            const res = await fetchWithTimeout(url);
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(data.error || data.message || `Permintaan gagal (${res.status})`);
+            return data;
+        }
+
+        async function sendMutation(url, method, body) {
+            const options = { method };
+            if (body !== undefined) options.body = body;
+
+            const res = await fetchWithTimeout(url, options);
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok || data.success === false || data.error) {
+                throw new Error(data.error || data.message || `Permintaan gagal (${res.status})`);
+            }
+            return data;
+        }
+
+        function escapeHTML(value) {
+            const element = document.createElement('span');
+            element.textContent = value ?? '';
+            return element.innerHTML;
+        }
+
+        function rowActionButton(id, action, icon, label, style) {
+            return `<button type="button" class="btn btn-sm ${style}" data-row-action="${action}" data-row-id="${id}" title="${label}" aria-label="${label}">
+                <i class="bi ${icon}"></i>
+            </button>`;
+        }
+
+        function rowActionButtons(id, editHandler, deleteHandler) {
+            return `<div class="row-actions">
+                ${rowActionButton(id, editHandler, 'bi-pencil-square', 'Edit', 'btn-outline-primary')}
+                ${rowActionButton(id, deleteHandler, 'bi-trash-fill', 'Hapus', 'btn-outline-danger')}
+            </div>`;
+        }
+
+        function startInlineEdit(row, fields, saveHandler, cancelHandler, deleteHandler) {
+            row.dataset.originalContent = row.innerHTML;
+            fields.forEach(field => {
+                const cell = row.cells[field.index];
+                const value = cell.dataset.value ?? cell.textContent.trim();
+                const editor = field.type === 'select'
+                    ? document.createElement('select')
+                    : document.createElement('input');
+
+                editor.className = 'form-select form-select-sm';
+                if (field.type === 'select') {
+                    field.options.forEach(option => {
+                        const optionElement = document.createElement('option');
+                        optionElement.value = option.value ?? option;
+                        optionElement.textContent = option.label ?? option;
+                        editor.appendChild(optionElement);
+                    });
+                } else {
+                    editor.type = field.type || 'text';
+                    if (field.step) editor.step = field.step;
+                    if (field.min !== undefined) editor.min = field.min;
+                }
+                editor.value = value;
+                cell.replaceChildren(editor);
+            });
+
+            const id = row.dataset.id;
+            const actionsCell = row.cells[row.cells.length - 1];
+            actionsCell.classList.add('row-actions-cell');
+            actionsCell.innerHTML = `<div class="row-actions">
+                ${rowActionButton(id, saveHandler, 'bi-check-lg', 'Simpan', 'btn-success')}
+                ${rowActionButton(id, cancelHandler, 'bi-x-lg', 'Batal', 'btn-outline-secondary')}
+                ${rowActionButton(id, deleteHandler, 'bi-trash-fill', 'Hapus', 'btn-outline-danger')}
+            </div>`;
+        }
+
+        function getRowEditorValue(row, index) {
+            return row.cells[index].querySelector('input, select').value;
+        }
+
+        function setRowCell(row, index, value, displayValue = value) {
+            const cell = row.cells[index];
+            cell.dataset.value = value;
+            cell.textContent = displayValue;
+        }
+
+        function restoreRowActions(row, editAction, deleteAction) {
+            const actionsCell = row.cells[row.cells.length - 1];
+            actionsCell.innerHTML = rowActionButtons(row.dataset.id, editAction, deleteAction);
+        }
+
+        function cancelInlineEdit(rowId) {
+            const row = document.getElementById(rowId);
+            if (!row?.dataset.originalContent) return;
+            row.innerHTML = row.dataset.originalContent;
+            delete row.dataset.originalContent;
+        }
+
+        function hapusBaris(rowId) {
+            document.getElementById(rowId)?.remove();
+        }
+
+        const rowActionHandlers = {
+            editPOS,
+            hapusPOS,
+            simpanEditPOS,
+            batalEditPOS,
+            editStok,
+            hapusStok,
+            simpanEditStok,
+            batalEditStok,
+            editProcurement,
+            hapusProcurement,
+            simpanEditProcurement,
+            batalEditProcurement
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loginModalObj = new bootstrap.Modal(document.getElementById('loginModal'));
+            profileModalObj = new bootstrap.Modal(document.getElementById('profileModal'));
+            syncFilterFields('pos');
+            syncFilterFields('procurement');
+            loginModalObj.show();
+        });
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const u = document.getElementById('loginUsername').value;
+            const p = document.getElementById('loginPassword').value;
+
+            const res = await fetchWithTimeout('/api/login', { method: 'POST', body: `${u},${p}` });
+            const data = await res.json();
+            if (data.success) {
+                currentUser.username = data.username;
+                currentUser.nama = data.nama;
+                document.getElementById('navUserName').innerText = data.nama;
+                loginModalObj.hide();
+                loadPOS();
+            } else {
+                document.getElementById('loginAlert').classList.remove('d-none');
+            }
+        }
+
+        function openProfileModal() {
+            document.getElementById('profNama').value = currentUser.nama;
+            document.getElementById('profPassLama').value = '';
+            document.getElementById('profPassBaru').value = '';
+            profileModalObj.show();
+        }
+
+        async function simpanProfil(e) {
+            e.preventDefault();
+            const n = document.getElementById('profNama').value;
+            const pl = document.getElementById('profPassLama').value;
+            const pb = document.getElementById('profPassBaru').value;
+
+            const res = await fetchWithTimeout('/api/user/profile', { method: 'PUT', body: `${currentUser.username},${pl},${n},${pb}` });
+            const data = await res.json();
+            if (data.success) {
+                currentUser.nama = n;
+                document.getElementById('navUserName').innerText = n;
+                profileModalObj.hide();
+                alert('Profil berhasil disimpan!');
+            } else {
+                const alertEl = document.getElementById('profAlert');
+                alertEl.innerText = data.message;
+                alertEl.classList.remove('d-none');
+            }
+        }
+
+        const tableSettings = {
+            pos: { limit: 25, filterType: 'all', filterValue: '', filterDate: '' },
+            stok: { limit: 25 },
+            procurement: { limit: 25, filterType: 'all', filterValue: '', filterDate: '' }
+        };
+
+        function normalizeDate(value) {
+            return String(value ?? '').slice(0, 10);
+        }
+
+        function applyLimit(items, tableKey) {
+            const limit = Number(tableSettings[tableKey]?.limit || 25);
+            return items.slice(0, limit);
+        }
+
+        function applyFilter(items, tableKey, keyName) {
+            const setting = tableSettings[tableKey];
+            const filterType = setting.filterType || 'all';
+            const filterValue = (setting.filterValue || '').trim().toLowerCase();
+            const filterDate = (setting.filterDate || '').trim();
+
+            let result = [...items];
+
+            if (filterType === 'pembeli') {
+                result = result.filter(item => (item.pembeli || '').toLowerCase().includes(filterValue));
+            }
+
+            if (filterType === 'namaBahan') {
+                result = result.filter(item => (item.namaBahan || '').toLowerCase().includes(filterValue));
+            }
+
+            if (filterType === 'tanggal') {
+                if (filterDate) {
+                    result = result.filter(item => normalizeDate(item.tanggal) === filterDate);
+                }
+            }
+
+            if (filterType === 'all' && filterValue) {
+                result = result.filter(item => String(item[keyName] || '').toLowerCase().includes(filterValue));
+            }
+
+            return result;
+        }
+
+        function setTableLimit(tableKey, limit) {
+            tableSettings[tableKey].limit = Number(limit);
+            document.querySelectorAll(`[data-limit-button="${tableKey}"]`).forEach(btn => {
+                btn.classList.toggle('active', Number(btn.dataset.limit) === Number(limit));
+            });
+
+            if (tableKey === 'pos') loadPOS();
+            if (tableKey === 'stok') loadStok();
+            if (tableKey === 'procurement') loadProcurement();
+        }
+
+        function syncFilterFields(tableKey) {
+            const filterType = document.getElementById(`${tableKey}FilterType`);
+            const filterValue = document.getElementById(`${tableKey}FilterValue`);
+            const filterDate = document.getElementById(`${tableKey}FilterDate`);
+            if (!filterType || !filterValue || !filterDate) return;
+
+            const setting = tableSettings[tableKey];
+            filterType.value = setting.filterType || 'all';
+            filterValue.value = setting.filterValue || '';
+            filterDate.value = setting.filterDate || '';
+
+            const showText = filterType.value === 'all' ? false : filterType.value !== 'tanggal';
+            filterValue.disabled = !showText;
+            filterDate.disabled = filterType.value !== 'tanggal';
+            filterValue.placeholder = tableKey === 'pos' ? 'Masukkan nama pembeli' : 'Masukkan nama bahan';
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content-item').forEach(el => el.classList.add('d-none'));
+            document.getElementById(tabId).classList.remove('d-none');
+            document.querySelectorAll('#erpTabs .nav-link').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            if (tabId === 'posTab') loadPOS();
+            if (tabId === 'stokTab') loadStok();
+            if (tabId === 'procurementTab') { loadProcurement(); loadBahanOptions(); }
+            if (tabId === 'kasTab') loadKas();
+        }
+
+        function ubahGelas(d) {
+            const el = document.getElementById('posGelas');
+            el.value = Math.max(1, (parseInt(el.value) || 1) + d);
+        }
+
+        function buildPosRows(data) {
+            const rows = [...data].sort((a, b) => {
+                const dateDiff = new Date(b.tanggal || 0) - new Date(a.tanggal || 0);
+                return dateDiff || (b.id || 0) - (a.id || 0);
+            });
+
+            const filtered = applyFilter(rows, 'pos', 'pembeli');
+            return applyLimit(filtered, 'pos');
+        }
+
+        function buildProcurementRows(data) {
+            const rows = [...data].sort((a, b) => {
+                const dateDiff = new Date(b.tanggal || 0) - new Date(a.tanggal || 0);
+                return dateDiff || (b.id || 0) - (a.id || 0);
+            });
+
+            const filtered = applyFilter(rows, 'procurement', 'namaBahan');
+            return applyLimit(filtered, 'procurement');
+        }
+
+        // Operasi transaksi penjualan.
+        async function loadPOS() {
+            const data = await fetchJSON('/api/pos');
+            const tbody = document.getElementById('posTableBody');
+            tbody.innerHTML = '';
+            const rows = buildPosRows(data);
+            rows.forEach(i => {
+                tbody.innerHTML += `
+                    <tr id="pos-row-${i.id}" data-id="${i.id}">
+                        <td>${i.id}</td>
+                        <td data-value="${escapeHTML(i.channel)}">${escapeHTML(i.channel)}</td>
+                        <td data-value="${escapeHTML(i.pembeli || '')}">${escapeHTML(i.pembeli || '-')}</td>
+                        <td data-value="${i.gelas}">${i.gelas} Gelas</td>
+                        <td data-value="${i.total}">Rp ${i.total.toLocaleString()}</td>
+                        <td data-value="${escapeHTML(i.metode)}">${escapeHTML(i.metode)}</td>
+                        <td>${escapeHTML(i.tanggal)}</td>
+                        <td class="row-actions-cell">${rowActionButtons(i.id, 'editPOS', 'hapusPOS')}</td>
+                    </tr>`;
+            });
+        }
+
+        async function tambahTransaksi(e) {
+            e.preventDefault();
+            const ch = document.getElementById('posChannel').value;
+            const pem = document.getElementById('posPembeli').value;
+            const gel = document.getElementById('posGelas').value;
+            const tot = document.getElementById('posTotal').value;
+            const met = document.getElementById('posMetode').value;
+
+            try {
+                await sendMutation('/api/pos', 'POST', `${ch},${pem},${gel},${tot},${met}`);
+                e.target.reset();
+                document.getElementById('posGelas').value = 1;
+                await loadPOS();
+            } catch (error) {
+                alert('Transaksi gagal disimpan: ' + error.message);
+            }
+        }
+
+        async function hapusPOS(id) {
+            if (confirm("Anda yakin menghapus transaksi ini?")) {
+                try {
+                    await sendMutation('/api/pos?id=' + id, 'DELETE');
+                    hapusBaris(`pos-row-${id}`);
+                } catch (error) {
+                    alert('Transaksi gagal dihapus: ' + error.message);
+                }
+            }
+        }
+
+        async function editPOS(id) {
+            const row = document.getElementById(`pos-row-${id}`);
+            startInlineEdit(row, [
+                { index: 1, type: 'select', options: ['Walk-in', 'WhatsApp', 'GoFood', 'GrabFood'] },
+                { index: 2 },
+                { index: 3, type: 'number', min: 1, step: 1 },
+                { index: 4, type: 'number', min: 0, step: 1000 },
+                { index: 5, type: 'select', options: ['Cash', 'QRIS DANA/BCA'] }
+            ], 'simpanEditPOS', 'batalEditPOS', 'hapusPOS');
+        }
+
+        async function simpanEditPOS(id) {
+            const row = document.getElementById(`pos-row-${id}`);
+            const channel = getRowEditorValue(row, 1);
+            const pembeli = getRowEditorValue(row, 2);
+            const gelas = getRowEditorValue(row, 3);
+            const total = getRowEditorValue(row, 4);
+            const metode = getRowEditorValue(row, 5);
+
+            if (!Number.isInteger(Number(gelas)) || Number(gelas) < 1 || !Number.isInteger(Number(total)) || Number(total) < 0) {
+                alert('Jumlah gelas dan total harus berupa angka valid.');
+                return;
+            }
+            try {
+                await sendMutation('/api/pos', 'PUT', `${id},${channel},${pembeli},${gelas},${total},${metode}`);
+                setRowCell(row, 1, channel);
+                setRowCell(row, 2, pembeli, pembeli || '-');
+                setRowCell(row, 3, gelas, `${gelas} Gelas`);
+                setRowCell(row, 4, total, `Rp ${Number(total).toLocaleString()}`);
+                setRowCell(row, 5, metode);
+                restoreRowActions(row, 'editPOS', 'hapusPOS');
+                delete row.dataset.originalContent;
+            } catch (error) {
+                alert('Transaksi gagal diperbarui: ' + error.message);
+            }
+        }
+
+        function batalEditPOS(id) {
+            cancelInlineEdit(`pos-row-${id}`);
+        }
+
+        // Operasi persediaan bahan baku.
+        async function loadStok() {
+            const data = await fetchJSON('/api/stok');
+            const tbody = document.getElementById('stokTableBody');
+            tbody.innerHTML = '';
+            const rows = [...data].sort((a, b) => (b.id || 0) - (a.id || 0)).slice(0, Number(tableSettings.stok.limit || 25));
+            rows.forEach(i => {
+                tbody.innerHTML += `
+                    <tr id="stok-row-${i.id}" data-id="${i.id}">
+                        <td><strong>${i.id}</strong></td>
+                        <td data-value="${escapeHTML(i.nama)}">${escapeHTML(i.nama)}</td>
+                        <td data-value="${i.stok}">${formatDesimal(i.stok)}</td>
+                        <td data-value="${escapeHTML(i.satuan)}">${escapeHTML(i.satuan)}</td>
+                        <td data-value="${i.minStok}">${formatDesimal(i.minStok)}</td>
+                        <td class="row-actions-cell">${rowActionButtons(i.id, 'editStok', 'hapusStok')}</td>
+                    </tr>`;
+            });
+        }
+
+        async function tambahBahanBaku(e) {
+            e.preventDefault();
+            const n = document.getElementById('newNama').value;
+            const s = document.getElementById('newStok').value;
+            const sat = document.getElementById('newSatuan').value;
+            const m = document.getElementById('newMin').value;
+
+            try {
+                await sendMutation('/api/stok', 'POST', `${n},${s},${sat},${m}`);
+                e.target.reset();
+                await loadStok();
+            } catch (error) {
+                alert('Bahan baku gagal disimpan: ' + error.message);
+            }
+        }
+
+        async function hapusStok(id) {
+            if (confirm("Anda yakin menghapus bahan baku ini?")) {
+                try {
+                    await sendMutation('/api/stok?id=' + id, 'DELETE');
+                    hapusBaris(`stok-row-${id}`);
+                } catch (error) {
+                    alert('Bahan baku gagal dihapus: ' + error.message);
+                }
+            }
+        }
+
+        async function editStok(id) {
+            const row = document.getElementById(`stok-row-${id}`);
+            startInlineEdit(row, [
+                { index: 1 },
+                { index: 2, type: 'number', min: 0, step: 0.1 },
+                { index: 3 },
+                { index: 4, type: 'number', min: 0, step: 0.1 }
+            ], 'simpanEditStok', 'batalEditStok', 'hapusStok');
+        }
+
+        async function simpanEditStok(id) {
+            const row = document.getElementById(`stok-row-${id}`);
+            const nama = getRowEditorValue(row, 1);
+            const stok = getRowEditorValue(row, 2);
+            const satuan = getRowEditorValue(row, 3);
+            const minStok = getRowEditorValue(row, 4);
+
+            if ([stok, minStok].some(value => !Number.isFinite(Number(value)) || Number(value) < 0)) {
+                alert('Stok dan batas minimum harus berupa angka yang tidak negatif.');
+                return;
+            }
+            try {
+                await sendMutation('/api/stok', 'PUT', `${id},${nama},${stok},${satuan},${minStok}`);
+                setRowCell(row, 1, nama);
+                setRowCell(row, 2, stok, formatDesimal(stok));
+                setRowCell(row, 3, satuan);
+                setRowCell(row, 4, minStok, formatDesimal(minStok));
+                restoreRowActions(row, 'editStok', 'hapusStok');
+                delete row.dataset.originalContent;
+            } catch (error) {
+                alert('Bahan baku gagal diperbarui: ' + error.message);
+            }
+        }
+
+        function batalEditStok(id) {
+            cancelInlineEdit(`stok-row-${id}`);
+        }
+
+        // Operasi pembelian bahan baku.
+        async function loadBahanOptions() {
+            const data = await fetchJSON('/api/stok');
+            let opt = '<option value="" disabled selected>Pilih bahan baku</option>';
+            data.forEach(i => opt += `<option value="${i.id}">ID ${i.id} - ${i.nama}</option>`);
+            document.getElementById('procBahanSelect').innerHTML = opt;
+        }
+
+        async function loadProcurement() {
+            const data = await fetchJSON('/api/procurement');
+            const tbody = document.getElementById('procTableBody');
+            tbody.innerHTML = '';
+            const rows = buildProcurementRows(data);
+            rows.forEach(i => {
+                const idBahan = i.id_bahan ?? i.idBahan ?? '';
+                const photoUrl = `/api/procurement/photo?id=${i.id}`;
+                tbody.innerHTML += `
+                    <tr id="proc-row-${i.id}" data-id="${i.id}">
+                        <td>${i.id}</td>
+                        <td data-value="${idBahan}"><strong>${idBahan || '-'}</strong></td>
+                        <td data-value="${escapeHTML(i.namaBahan)}">${escapeHTML(i.namaBahan)}</td>
+                        <td data-value="${i.jumlah}">${formatDesimal(i.jumlah)}</td>
+                        <td data-value="${i.total}">Rp ${i.total.toLocaleString()}</td>
+                        <td data-value="${escapeHTML(i.supplier)}">${escapeHTML(i.supplier)}</td>
+                        <td>${escapeHTML(i.tanggal)}</td>
+                        <td class="procurement-photo-cell">
+                            ${i.hasFoto
+                                ? `<a href="${photoUrl}" target="_blank" rel="noopener"><img src="${photoUrl}" alt="Foto pembelian ${i.id}" loading="lazy"></a>`
+                                : '<span class="procurement-photo-empty">Belum ada</span>'}
+                            <div class="row-actions justify-content-center mt-1">
+                                <button type="button" class="btn btn-sm btn-outline-primary" data-photo-action="upload" data-photo-id="${i.id}" title="${i.hasFoto ? 'Ganti foto' : 'Upload foto'}" aria-label="${i.hasFoto ? 'Ganti foto' : 'Upload foto'}">
+                                    <i class="bi ${i.hasFoto ? 'bi-arrow-repeat' : 'bi-camera'}"></i>
+                                </button>
+                                ${i.hasFoto
+                                    ? `<button type="button" class="btn btn-sm btn-outline-danger" data-photo-action="delete" data-photo-id="${i.id}" title="Hapus foto" aria-label="Hapus foto"><i class="bi bi-trash-fill"></i></button>`
+                                    : ''}
+                            </div>
+                        </td>
+                        <td class="row-actions-cell">${rowActionButtons(i.id, 'editProcurement', 'hapusProcurement')}</td>
+                    </tr>`;
+            });
+        }
+
+        async function tambahPembelian(e) {
+            e.preventDefault();
+            const b = document.getElementById('procBahanSelect').value;
+            const j = document.getElementById('procJumlah').value;
+            const t = document.getElementById('procTotal').value;
+            const s = document.getElementById('procSupplier').value;
+            const foto = document.getElementById('procFoto').files[0];
+
+            if (!b) {
+                alert('Pilih bahan baku terlebih dahulu.');
+                return;
+            }
+            if (foto && foto.size > 5 * 1024 * 1024) {
+                alert('Ukuran foto maksimal 5 MB.');
+                return;
+            }
+            const tambahKeStok = confirm(
+                `Apakah jumlah ${j} ingin ditambahkan ke stok bahan ini?\n\nPilih "OK" untuk menambah stok atau "Cancel" untuk mencatat pembelian saja.`
+            );
+            try {
+                const pembelian = await sendMutation('/api/procurement', 'POST', `${b},${j},${t},${s},${tambahKeStok}`);
+                let pesanFoto = '';
+                if (foto) {
+                    try {
+                        await uploadFotoPembelian(pembelian.id, foto);
+                    } catch (error) {
+                        pesanFoto = ` Pembelian tersimpan, tetapi foto gagal diunggah: ${error.message}`;
+                    }
+                }
+                e.target.reset();
+                await loadBahanOptions();
+                await loadProcurement();
+                await loadStok();
+                await loadKas();
+                if (pesanFoto) alert(pesanFoto);
+            } catch (error) {
+                alert('Pembelian gagal disimpan: ' + error.message);
+            }
+        }
+
+        async function uploadFotoPembelian(id, foto) {
+            const response = await fetchWithTimeout(`/api/procurement/photo?id=${id}`, {
+                method: 'POST',
+                headers: { 'Content-Type': foto.type },
+                body: foto
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok || data.error) {
+                throw new Error(data.error || `Upload foto gagal (${response.status})`);
+            }
+        }
+
+        function pilihFotoPembelian(id) {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/jpeg,image/png,image/webp';
+            input.addEventListener('change', async () => {
+                const foto = input.files[0];
+                if (!foto) return;
+                if (foto.size > 5 * 1024 * 1024) {
+                    alert('Ukuran foto maksimal 5 MB.');
+                    return;
+                }
+                try {
+                    await uploadFotoPembelian(id, foto);
+                    await loadProcurement();
+                } catch (error) {
+                    alert('Foto gagal diunggah: ' + error.message);
+                }
+            });
+            input.click();
+        }
+
+        async function hapusFotoPembelian(id) {
+            if (!confirm('Hapus foto pada pembelian ini?')) return;
+            try {
+                await sendMutation(`/api/procurement/photo?id=${id}`, 'DELETE');
+                await loadProcurement();
+            } catch (error) {
+                alert('Foto gagal dihapus: ' + error.message);
+            }
+        }
+
+        async function hapusProcurement(id) {
+            if (confirm("Anda yakin menghapus riwayat pembelian ini?")) {
+                try {
+                    await sendMutation('/api/procurement?id=' + id, 'DELETE');
+                    hapusBaris(`proc-row-${id}`);
+                } catch (error) {
+                    alert('Pembelian gagal dihapus: ' + error.message);
+                }
+            }
+        }
+
+        async function editProcurement(id) {
+            await loadBahanOptions();
+            const row = document.getElementById(`proc-row-${id}`);
+            const options = [...document.getElementById('procBahanSelect').options]
+                .filter(option => option.value)
+                .map(option => ({ value: option.value, label: option.textContent }));
+            startInlineEdit(row, [
+                { index: 1, type: 'select', options },
+                { index: 3, type: 'number', min: 0, step: 0.1 },
+                { index: 4, type: 'number', min: 0, step: 1000 },
+                { index: 5 }
+            ], 'simpanEditProcurement', 'batalEditProcurement', 'hapusProcurement');
+        }
+
+        async function simpanEditProcurement(id) {
+            const row = document.getElementById(`proc-row-${id}`);
+            const idBahan = getRowEditorValue(row, 1);
+            const jumlah = getRowEditorValue(row, 3);
+            const total = getRowEditorValue(row, 4);
+            const supplier = getRowEditorValue(row, 5);
+
+            if (!idBahan || !Number.isFinite(Number(jumlah)) || Number(jumlah) <= 0 ||
+                !Number.isInteger(Number(total)) || Number(total) < 0) {
+                alert('Bahan, jumlah, dan total pembelian harus valid.');
+                return;
+            }
+            try {
+                await sendMutation('/api/procurement', 'PUT', `${id},${idBahan},${jumlah},${total},${supplier}`);
+                const option = row.cells[1].querySelector('select').selectedOptions[0];
+                const namaBahan = option.textContent.replace(/^ID\s+\d+\s*-\s*/, '');
+                setRowCell(row, 1, idBahan);
+                setRowCell(row, 2, namaBahan);
+                setRowCell(row, 3, jumlah, formatDesimal(jumlah));
+                setRowCell(row, 4, total, `Rp ${Number(total).toLocaleString()}`);
+                setRowCell(row, 5, supplier);
+                restoreRowActions(row, 'editProcurement', 'hapusProcurement');
+                delete row.dataset.originalContent;
+            } catch (error) {
+                alert('Pembelian gagal diperbarui: ' + error.message);
+            }
+        }
+
+        function batalEditProcurement(id) {
+            cancelInlineEdit(`proc-row-${id}`);
+        }
+
+        async function loadKas() {
+            const period = document.getElementById('kasFilterPeriod').value;
+            const [transactions, purchases] = await Promise.all([
+                fetchJSON('/api/pos'),
+                fetchJSON('/api/procurement')
+            ]);
+            const filterDate = document.getElementById('kasFilterDate').value;
+            const filterMonth = document.getElementById('kasFilterMonth').value;
+            const filterYear = document.getElementById('kasFilterYear').value;
+            const allYears = [...transactions, ...purchases]
+                .map(item => Number(normalizeDate(item.tanggal).slice(0, 4)))
+                .filter(year => Number.isInteger(year) && year > 0);
+            updateKasYearOptions(allYears);
+
+            const matchesPeriod = item => {
+                const date = normalizeDate(item.tanggal);
+                if (period === 'date' && filterDate) return date === filterDate;
+                if (period === 'month') {
+                    return date.slice(5, 7) === filterMonth
+                        && (!filterYear || date.slice(0, 4) === filterYear);
+                }
+                if (period === 'year' && filterYear) return date.slice(0, 4) === filterYear;
+                return true;
+            };
+            const totalPemasukan = transactions
+                .filter(matchesPeriod)
+                .reduce((total, item) => total + (Number(item.total) || 0), 0);
+            const totalPengeluaran = purchases
+                .filter(matchesPeriod)
+                .reduce((total, item) => total + (Number(item.total) || 0), 0);
+            const saldoNeto = totalPemasukan - totalPengeluaran;
+
+            document.getElementById('kasMasuk').innerText = 'Rp ' + totalPemasukan.toLocaleString();
+            document.getElementById('kasKeluar').innerText = 'Rp ' + totalPengeluaran.toLocaleString();
+            document.getElementById('kasSaldo').innerText = 'Rp ' + saldoNeto.toLocaleString();
+
+            const ctx = document.getElementById('chartKas').getContext('2d');
+            if (myChart) myChart.destroy();
+            myChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Total Uang Masuk', 'Total Uang Keluar'],
+                    datasets: [{ label: 'Nominal (Rp)', data: [totalPemasukan, totalPengeluaran], backgroundColor: ['#16a34a', '#dc2626'] }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+
+        function updateKasYearOptions(years) {
+            const select = document.getElementById('kasFilterYear');
+            const selectedYear = select.value;
+            const availableYears = [...new Set([...years, new Date().getFullYear()])]
+                .sort((first, second) => second - first);
+            select.innerHTML = '<option value="">Pilih tahun</option>'
+                + availableYears.map(year => `<option value="${year}">${year}</option>`).join('');
+            if (availableYears.includes(Number(selectedYear))) {
+                select.value = selectedYear;
+            } else if (availableYears.length) {
+                select.value = String(availableYears[0]);
+            }
+        }
+
+        function syncKasFilterFields() {
+            const period = document.getElementById('kasFilterPeriod').value;
+            document.getElementById('kasDateFilterGroup').hidden = period !== 'date';
+            document.getElementById('kasMonthFilterGroup').hidden = period !== 'month';
+            document.getElementById('kasYearFilterGroup').hidden = period !== 'month' && period !== 'year';
+        }
+
+        document.addEventListener('click', async event => {
+            const photoButton = event.target.closest('[data-photo-action]');
+            if (photoButton) {
+                const id = Number(photoButton.dataset.photoId);
+                if (photoButton.dataset.photoAction === 'upload') {
+                    pilihFotoPembelian(id);
+                } else if (photoButton.dataset.photoAction === 'delete') {
+                    await hapusFotoPembelian(id);
+                }
+                return;
+            }
+
+            const limitButton = event.target.closest('[data-limit-button]');
+            if (limitButton) {
+                const tableKey = limitButton.dataset.limitButton;
+                setTableLimit(tableKey, limitButton.dataset.limit);
+                return;
+            }
+
+            const button = event.target.closest('[data-row-action]');
+            if (!button) return;
+
+            const handler = rowActionHandlers[button.dataset.rowAction];
+            if (!handler) return;
+
+            button.disabled = true;
+            try {
+                await handler(Number(button.dataset.rowId));
+            } catch (error) {
+                alert('Aksi gagal: ' + error.message);
+            } finally {
+                if (button.isConnected) button.disabled = false;
+            }
+        });
+
+        document.addEventListener('input', event => {
+            const target = event.target;
+            if (target.id === 'posFilterType') {
+                tableSettings.pos.filterType = target.value;
+                syncFilterFields('pos');
+                loadPOS();
+            }
+            if (target.id === 'posFilterValue') {
+                tableSettings.pos.filterValue = target.value;
+                loadPOS();
+            }
+            if (target.id === 'posFilterDate') {
+                tableSettings.pos.filterDate = target.value;
+                loadPOS();
+            }
+            if (target.id === 'procFilterType') {
+                tableSettings.procurement.filterType = target.value;
+                syncFilterFields('procurement');
+                loadProcurement();
+            }
+            if (target.id === 'procFilterValue') {
+                tableSettings.procurement.filterValue = target.value;
+                loadProcurement();
+            }
+            if (target.id === 'procFilterDate') {
+                tableSettings.procurement.filterDate = target.value;
+                loadProcurement();
+            }
+        });
+
+        document.addEventListener('change', event => {
+            const target = event.target;
+            if (target.id === 'kasFilterPeriod') {
+                syncKasFilterFields();
+                loadKas();
+            }
+            if (['kasFilterDate', 'kasFilterMonth', 'kasFilterYear'].includes(target.id)) {
+                loadKas();
+            }
+            if (target.id === 'posFilterType') {
+                tableSettings.pos.filterType = target.value;
+                syncFilterFields('pos');
+                loadPOS();
+            }
+            if (target.id === 'procFilterType') {
+                tableSettings.procurement.filterType = target.value;
+                syncFilterFields('procurement');
+                loadProcurement();
+            }
+        });
+    </script>
+</body>
+</html>

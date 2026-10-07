@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Es Coklat Berkah icon">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#7b4b2a"/>
+      <stop offset="100%" stop-color="#3b210f"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="24" fill="url(#bg)"/>
+  <path d="M40 42h48c5 0 9 4 9 9v26c0 16-13 29-29 29H60c-16 0-29-13-29-29V51c0-5 4-9 9-9z" fill="#f6ead8"/>
+  <path d="M36 48h56l-6 49c-3 16-15 27-31 27s-28-11-31-27l-6-49z" fill="#f2d4a7" opacity="0.9"/>
+  <path d="M31 48h66c0 0-3 9-10 14H41c-7-5-10-14-10-14z" fill="#c98f52"/>
+  <path d="M54 34c-6 0-11 3-13 8 4-2 8-3 13-3 9 0 15 4 18 9 6-3 9-8 9-13 0-5-4-9-10-9-5 0-9 2-17 8z" fill="#f8f3ee" opacity="0.8"/>
+  <path d="M45 25c0-8 5-13 12-13 6 0 12 5 12 13" fill="none" stroke="#f8f3ee" stroke-width="6" stroke-linecap="round"/>
+  <path d="M76 25c0-8 5-13 12-13 6 0 12 5 12 13" fill="none" stroke="#f8f3ee" stroke-width="6" stroke-linecap="round"/>
+  <path d="M31 80h66v8c0 4-3 7-7 7H38c-4 0-7-3-7-7v-8z" fill="#efb96e"/>
+  <path d="M35 90h58" stroke="#4a2c11" stroke-width="4" stroke-linecap="round"/>
+  <path d="M74 39c0 0 8 7 8 18" fill="none" stroke="#4a2c11" stroke-width="5" stroke-linecap="round"/>
+</svg>
